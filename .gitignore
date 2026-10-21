@@ -1,0 +1,22 @@
+# dependencies / build
+node_modules/
+dist/
+
+# 계정·세션·진단 정보는 절대 커밋하지 않는다
+auth.json
+*.auth.json
+.env
+.env.*
+!.env.example
+history.json
+config.json
+diagnostics/
+.tistory-cli/
+
+# misc
+.DS_Store
+*.log
+
+diagnose-report.txt
+upload-report.txt
+login-report.txt
