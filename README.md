@@ -6,10 +6,18 @@
 ## 설치
 
 ```bash
+# npm
 npm install -g tistory-cli
+# pnpm
+pnpm add -g tistory-cli
+# yarn (v1)
+yarn global add tistory-cli
+
 tistory setup        # 처음 한 번: 자동화용 Chromium 설치 (약 150MB)
 tistory login        # 열린 창에서 직접 로그인
 ```
+
+설치 없이 한 번만 써 보려면 `npx tistory-cli …`, `pnpm dlx tistory-cli …`, `yarn dlx tistory-cli …`(yarn 2+) 를 쓰면 됩니다. 실행 명령 이름은 `tistory` 입니다.
 
 Node.js 20 이상이 필요합니다. 설치 때 브라우저를 내려받지 않으므로(`--ignore-scripts` 환경에서도 안전) `setup` 을 따로 실행합니다.
 
