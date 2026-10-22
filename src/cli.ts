@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { Command } from "commander";
 import { NoSessionError } from "./auth/session.js";
+import { checkForUpdate, fetchLatestVersion, updateCheckDisabled } from "./core/update.js";
 import { registerSetupCommand } from "./commands/setup.js";
 import { registerAuthCommands } from "./commands/auth.js";
 import { registerBlogCommands } from "./commands/blog.js";
@@ -13,6 +14,11 @@ import { registerDeleteCommand } from "./commands/delete.js";
 const { version } = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8"),
 ) as { version: string };
+
+// 새 버전 확인은 명령과 동시에 시작하고, 명령이 끝난 뒤 결과만 본다. (느리거나 실패해도 명령에는 영향 없음)
+const updateCheck = updateCheckDisabled(process.env, Boolean(process.stderr.isTTY))
+  ? undefined
+  : fetchLatestVersion().catch(() => undefined);
 
 const program = new Command();
 
@@ -52,4 +58,9 @@ try {
     console.error(error instanceof Error ? error.message : error);
   }
   process.exitCode = 1;
+}
+
+if (updateCheck) {
+  const notice = await checkForUpdate(version, updateCheck);
+  if (notice) console.error(notice);
 }

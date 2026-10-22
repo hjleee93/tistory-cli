@@ -32,7 +32,7 @@ export class PostError extends Error {
 
 const FRONTMATTER = /^﻿?---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/;
 const VISIBILITIES: readonly Visibility[] = ["public", "private", "protected"];
-const KNOWN_KEYS = new Set(["title", "tags", "category", "visibility"]);
+const KNOWN_KEYS = new Set(["title", "tags", "category", "visibility", "breaks"]);
 
 function splitFrontmatter(text: string): {
   meta: Record<string, unknown>;
@@ -136,6 +136,7 @@ export function parsePostText(text: string): Post {
   const tags = parseTags(meta.tags, problems);
   const category = asText(meta.category);
 
+  const breaks = meta.breaks === undefined ? true : !["false", "no", "0"].includes(String(meta.breaks).toLowerCase());
   let visibility: Visibility = "public";
   if (meta.visibility !== undefined) {
     const value = asText(meta.visibility);
@@ -151,7 +152,8 @@ export function parsePostText(text: string): Post {
   if (body.trim() === "") problems.push("본문이 비어 있습니다.");
   if (problems.length > 0) throw new PostError(problems);
 
-  const html = (marked.parse(body, { gfm: true, async: false }) as string).trim();
+  // 블로그 글은 줄을 바꿔 쓰는 습관이 많아서 한 번 줄바꿈도 <br> 로 바꾼다. (breaks: false 로 끌 수 있음)
+  const html = (marked.parse(body, { gfm: true, breaks, async: false }) as string).trim();
   const localImages = findLocalImages(html);
   if (localImages.length > 0) {
     warnings.push(

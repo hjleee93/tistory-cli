@@ -20,3 +20,6 @@ diagnostics/
 diagnose-report.txt
 upload-report.txt
 login-report.txt
+
+# 개인 원고(블로그 글 초안)
+drafts/

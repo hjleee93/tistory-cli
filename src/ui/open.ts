@@ -69,7 +69,7 @@ export async function askYesNo(question: string): Promise<boolean> {
   if (!process.stdin.isTTY) return false;
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   try {
-    const answer = (await rl.question(`${question} (y/N) `)).trim().toLowerCase();
+    const answer = (await rl.question(`${question} (Y/N) `)).trim().toLowerCase();
     return answer === "y" || answer === "yes" || answer === "ㅛ";
   } finally {
     rl.close();

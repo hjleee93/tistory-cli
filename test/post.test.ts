@@ -114,3 +114,11 @@ test("GFM 표와 코드블록이 HTML로 변환된다", () => {
   assert.match(post.html, /<table>/);
   assert.match(post.html, /<pre><code class="language-js">/);
 });
+
+test("줄바꿈: 기본은 한 번 줄바꿈도 <br>, breaks: false 면 표준 마크다운", () => {
+  const withBreaks = parsePostText("---\ntitle: t\n---\n첫 줄\n둘째 줄");
+  assert.match(withBreaks.html, /첫 줄<br>\s*둘째 줄/);
+  const standard = parsePostText("---\ntitle: t\nbreaks: false\n---\n첫 줄\n둘째 줄");
+  assert.doesNotMatch(standard.html, /<br>/);
+  assert.ok(!standard.warnings.some((w) => w.includes("breaks")));
+});

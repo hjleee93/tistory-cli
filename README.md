@@ -30,6 +30,18 @@ npm run dev -- <명령>     # 아래 `tistory <명령>` 과 동일
 npm test
 ```
 
+## 업데이트
+
+티스토리 화면이 바뀌면 자동화가 깨질 수 있고, 그때는 고쳐진 새 버전을 받아야 합니다.
+
+```bash
+npm update -g tistory-cli          # pnpm: pnpm add -g tistory-cli@latest / yarn: yarn global upgrade tistory-cli
+```
+
+- 명령을 실행하고 나면 새 버전이 있을 때 안내가 한 줄 나옵니다. 하루에 한 번만 npm 저장소에 확인하고(전송 정보는 패키지 이름뿐), 실패해도 명령에는 영향이 없습니다.
+- 끄려면 환경변수 `TISTORY_NO_UPDATE_CHECK=1` (CI 환경과 터미널이 아닐 때는 자동으로 확인하지 않습니다).
+- 화면이 바뀌어 동작하지 않으면 `tistory doctor --share` 결과를 붙여 [이슈](https://github.com/hjleee93/tistory-cli/issues)로 알려 주세요.
+
 ## 사용
 
 ```bash
@@ -57,6 +69,7 @@ title: 글 제목          # 없으면 본문 첫 줄의 `# 제목`을 사용
 tags: [태그1, 태그2]
 category: 카테고리명
 visibility: public      # public | private | protected (발행할 때 적용)
+breaks: true            # 기본값. 한 번 줄바꿈도 줄바꿈으로 처리 (false 면 표준 마크다운: 빈 줄이 있어야 문단 구분)
 ---
 본문 (Markdown)
 ```
@@ -65,7 +78,7 @@ visibility: public      # public | private | protected (발행할 때 적용)
 tistory publish post.md --dry-run                 # 변환 결과만 확인 (업로드 안 함)
 tistory publish post.md --dry-run --show-html     # 변환된 HTML까지 출력
 tistory publish post.md --headed                  # 임시저장 (공개되지 않음), 창을 보면서
-tistory publish post.md --category 개발           # 카테고리를 명령에서 지정
+tistory publish post.md --category 개발            # 카테고리를 명령에서 지정
 tistory publish post.md --force                   # 이미 올린 원고를 다시 올릴 때
 tistory publish post.md --publish                 # 공개 발행 (발행 전에 y/n 확인)
 tistory publish post.md --publish --yes           # 확인 질문 없이 발행
@@ -74,7 +87,7 @@ tistory publish post.md --open                    # 저장 후 묻지 않고 브
 tistory publish post.md --no-open                 # 저장 후 확인 질문 없이 끝내기
 ```
 
-카테고리를 적지 않았거나 이름이 틀리면(터미널에서 실행할 때) 내 카테고리 목록에서 번호로 고르는 화면이 나옵니다.
+카테고리를 적지 않았거나 이름이 틀리면(터미널에서 실행할 때) 내 카테고리 목록에서 고르는 화면이 나옵니다. ↑/↓(또는 j/k)로 이동하고 Enter로 선택, Esc는 건너뛰기입니다. (방향키를 쓸 수 없는 환경에서는 번호 입력으로 바뀝니다)
 
 임시저장은 글쓰기 화면의 `임시저장` 목록에 쌓입니다. 같은 원고(내용 해시 기준)를
 같은 블로그에 두 번 올리려 하면 막고, 저장이 실제로 됐는지(임시저장 개수 증가)
