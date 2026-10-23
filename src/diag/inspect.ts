@@ -804,3 +804,96 @@ export async function inspectLogin(): Promise<void> {
     await browser.close().catch(() => undefined);
   }
 }
+
+/**
+ * [개발용] 임시저장 목록(에디터의 '임시저장 개수' 버튼)의 구조와, 항목을 눌렀을 때의 변화를 읽는다.
+ * 저장·발행·삭제 버튼은 누르지 않는다. 항목은 제목 부분만 눌러 불러온다. 글 제목은 가린다.
+ */
+export async function inspectDrafts(
+  context: BrowserContext,
+  blog: string,
+  options: { open?: boolean } = {},
+): Promise<boolean> {
+  const session = await checkSession(context);
+  if (!session.ok) {
+    console.error(describeFailure(session));
+    return false;
+  }
+  const page = await context.newPage();
+  try {
+    const dialogs: string[] = [];
+    page.on("dialog", (d) => {
+      dialogs.push(`${d.type()}: ${d.message().slice(0, 80)}`);
+      void d.dismiss().catch(() => undefined);
+    });
+    const writes: string[] = [];
+    page.on("request", (r) => {
+      if (r.method() !== "GET" && r.method() !== "HEAD") {
+        const u = new URL(r.url());
+        writes.push(`${r.method()} ${u.hostname}${u.pathname.replace(/\d+/g, "N")}`);
+      }
+    });
+    await page.goto(editorUrl(blog), { waitUntil: "domcontentloaded", timeout: 30_000 });
+    await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => undefined);
+
+    const base = await outline(page, { maskText: true });
+    const button = page.getByRole("button", { name: /임시저장 개수/ }).first();
+    if (!(await button.isVisible().catch(() => false))) {
+      console.log("'임시저장 개수' 버튼을 찾지 못했습니다.");
+      printBlock("기본 화면의 요소", base);
+      return false;
+    }
+    console.log(`버튼: ${(await button.innerText().catch(() => "?")).replace(/\s+/g, " ")}`);
+    await button.click({ timeout: 5_000 });
+    await page.waitForTimeout(1_000);
+    const opened = await outline(page, { maskText: true, extraSelectors: ["li", "a"] });
+    printBlock("1) 임시저장 목록을 열었을 때 새로 보이는 요소", minus(opened, base));
+
+    if (options.open) {
+      // 목록 항목(a.link_info)의 구조를 글자만 가려 출력하고, 마지막(가장 오래된 쪽이 아닌 제목형) 항목을 눌러 불러온다
+      const clicked = await page.evaluate(() => {
+        // tsx/esbuild가 화면 안 코드에 끼워 넣는 도우미 함수가 없어서 생기는 오류 방지
+        (globalThis as unknown as { __name?: unknown }).__name ??= (f: unknown) => f;
+        const links = Array.from(document.querySelectorAll("a.link_info")) as HTMLElement[];
+        const mask = (t: string): string => (t.length > 8 ? `⟨${t.length}자⟩` : t);
+        const dump = (el: Element): string => {
+          const clone = el.cloneNode(true) as Element;
+          const walk = (n: Node): void => {
+            if (n.nodeType === 3) n.textContent = mask((n.textContent ?? "").trim());
+            n.childNodes.forEach(walk);
+            if (n instanceof Element) for (const at of ["href", "src", "style"]) n.removeAttribute(at);
+          };
+          walk(clone);
+          return clone.outerHTML.replace(/\s+/g, " ").slice(0, 700);
+        };
+        const out: string[] = [];
+        links.forEach((l, i) => out.push(`항목${i} 조상: ${l.parentElement?.tagName}.${l.parentElement?.className} > ${l.parentElement?.parentElement?.tagName}.${l.parentElement?.parentElement?.className}\n    ${dump(l.parentElement?.parentElement ?? l)}`));
+        const target = links[links.length - 1];
+        if (!target) return "(항목 없음)";
+        target.setAttribute("data-probe", "1");
+        return `${links.length}개 중 마지막 a.link_info 를 누름\n  ${out.join("\n  ")}`;
+      });
+      console.log(`\n눌러 볼 요소: ${clicked}`);
+      const probe = page.locator('[data-probe="1"]').first();
+      if (await probe.count()) {
+        const before = page.url().replace(/\d+/g, "N");
+        await probe.click({ timeout: 5_000 }).catch((e) => console.log(`클릭 실패: ${String(e).split("\n")[0]}`));
+        await page.waitForTimeout(2_000);
+        await page.waitForLoadState("networkidle", { timeout: 8_000 }).catch(() => undefined);
+        console.log(`주소: ${before} → ${page.url().replace(/\d+/g, "N")}`);
+        const titleLen = await page.locator("#post-title-inp").first().inputValue().then((v) => v.length).catch(() => -1);
+        console.log(`불러온 뒤 제목 글자 수: ${titleLen}`);
+        printBlock("2) 항목을 누른 뒤 새로 보이는 요소", minus(await outline(page, { maskText: true }), opened));
+      }
+    }
+    printBlock("발생한 대화상자", dialogs);
+    printBlock("전송된 쓰기 요청", writes);
+    console.log("\n저장·발행·삭제는 하지 않았습니다.");
+    return true;
+  } catch (error) {
+    console.error(`임시저장 점검 중 오류: ${error instanceof Error ? error.message.split("\n")[0] : String(error)}`);
+    return false;
+  } finally {
+    await page.close().catch(() => undefined);
+  }
+}

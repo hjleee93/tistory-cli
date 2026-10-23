@@ -1,7 +1,7 @@
 import type { Command } from "commander";
 import { withSession } from "../auth/session.js";
 import { resolveBlog } from "../core/config.js";
-import { inspectEditor, inspectPost, inspectLogin, inspectPosts, inspectUpload } from "../diag/inspect.js";
+import { inspectDrafts, inspectEditor, inspectPost, inspectLogin, inspectPosts, inspectUpload } from "../diag/inspect.js";
 import { isTistoryUrl } from "../ui/open.js";
 import { teeToFile } from "../diag/diagnose.js";
 
@@ -80,6 +80,21 @@ export function registerInspectCommands(program: Command): void {
       }
       const ok = await withSession({ headless: !opts.headed }, (ctx) =>
         inspectPost(ctx, blog, url),
+      );
+      if (!ok) process.exitCode = 2;
+    });
+
+  program
+    .command("inspect-drafts")
+    .description("[개발용] 임시저장 목록 화면의 구조를 출력합니다 (저장·발행·삭제 안 함, 제목은 가림)")
+    .option("-o, --out <file>", "출력을 저장할 파일", "drafts-report.txt")
+    .option("-b, --blog <name>", "블로그 (기본: 설정값)")
+    .option("--headed", "브라우저 창을 띄워서 실행")
+    .option("--open", "첫 임시저장 글을 눌러 불러오는 동작도 확인 (불러오기만 하고 저장은 안 함)")
+    .action(async (opts: { out: string; blog?: string; headed?: boolean; open?: boolean }) => {
+      const blog = await resolveBlog(opts.blog);
+      const ok = await teeToFile(opts.out, () =>
+        withSession({ headless: !opts.headed }, (ctx) => inspectDrafts(ctx, blog, { open: opts.open })),
       );
       if (!ok) process.exitCode = 2;
     });

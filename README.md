@@ -44,16 +44,79 @@ npm update -g tistory-cli          # pnpm: pnpm add -g tistory-cli@latest / yarn
 
 ## 사용
 
+처음 한 번: `tistory setup`(브라우저 설치) → `tistory login`(직접 로그인, 블로그 선택). 그 뒤로는 창 없이 동작합니다.
+
+### 글 올리기
+
 ```bash
-tistory login                     # 직접 로그인 → Enter → 내 블로그 목록에서 번호 선택
+tistory publish 글.md                 # 임시저장 (기본, 공개되지 않음)
+tistory publish 글.md --dry-run       # 올리지 않고 변환 결과만 확인
+tistory publish 글.md --publish       # 발행 (확인 질문 있음, -y 로 생략)
+tistory batch ./posts [--publish]     # 폴더·여러 파일을 한 번에 (계획 확인 후 진행)
+```
+
+- 원고의 로컬 이미지는 올릴 때 자동으로 업로드됩니다.
+- 같은 원고를 두 번 올리는 것은 막습니다. 다시 올리려면 `--force`.
+- 카테고리가 없거나 틀리면 목록에서 키보드(↑/↓, Enter)로 고릅니다.
+
+### 임시저장 글 발행하기
+
+```bash
+tistory drafts                        # 티스토리에 저장된 임시저장 글 목록
+tistory publish-draft                 # 목록에서 골라 발행
+tistory publish-draft 키워드 --private -y   # 제목에 키워드가 든 글을 비공개로, 확인 없이
+```
+
+### AI로 초안 쓰기 (Gemini)
+
+주제만 주면 AI가 초안을 써서 `drafts/주제.md`로 저장하고, 원하면 바로 임시저장까지 합니다. 발행은 하지 않습니다.
+
+```bash
+# 1) 무료 키: https://aistudio.google.com/apikey  →  .env 에 GEMINI_API_KEY=... 
+tistory write "Playwright로 브라우저 자동화 시작하기"
+tistory write "주제" -l long -n "친근한 말투로, 초보자 대상"   # 분량(short|medium|long), 추가 요청
+tistory write "주제" --save           # 묻지 않고 임시저장
+tistory write "주제" --no-save        # 파일만 만들기 (고친 뒤 tistory publish)
+```
+
+- AI 회사(구글)로 보내는 것은 **주제와 추가 요청뿐**입니다. 키는 요청 헤더로만 쓰고 화면에 출력하지 않습니다.
+- AI가 쓴 글입니다. 사실관계와 문장을 읽고 고친 뒤 발행하세요.
+- 모델은 `.env` 의 `AI_MODEL` 또는 `-m` 으로 바꿀 수 있습니다. (기본 `gemini-3.5-flash-lite`, 404 면 이름을 확인하세요)
+- 무료 한도와 데이터 사용 정책은 구글 쪽 약관을 따릅니다. 비공개 내용은 넣지 마세요.
+
+### 맞춤법 점검 (Gemini)
+
+```bash
+tistory check 글.md               # 맞춤법·띄어쓰기·오탈자 제안 목록 → 적용 여부 선택
+tistory check 글.md --apply       # 묻지 않고 모두 적용해 저장
+```
+
+- 코드 블록·인라인 코드·frontmatter 는 검사도 수정도 하지 않습니다. 문체·말투는 고치지 않고 명백한 오류만 제안합니다.
+- **본문 글이 구글로 전송됩니다.** 공개할 글에만 쓰세요. 적용하면 파일이 바뀌니 git 등으로 변경분을 확인하세요.
+
+### 글 다듬기 + 변경 비교 (Gemini)
+
+```bash
+tistory improve 글.md                          # AI가 다듬은 결과를 diff로 보고 저장 방식 선택
+tistory improve 글.md -n "더 간결하게, 초보자 대상"   # 수정 방향 지정
+tistory improve 글.md -o 글.v2.md               # 묻지 않고 새 파일로 저장 (원본 유지)
+tistory improve 글.md --apply                  # 묻지 않고 원본에 덮어쓰기
+```
+
+- 삭제(빨강 `-`)와 추가(초록 `+`)를 문장 단위로 보여 줍니다. 저장은 새 파일(기본 추천) / 원본 덮어쓰기 / 버리기 중에서 고릅니다.
+- 글쓴이의 말투와 사실은 유지하고 없는 내용을 만들지 않도록 지시하지만, AI 제안이니 diff를 꼭 읽어 보세요. 코드 블록·이미지가 바뀌거나 결과가 너무 짧으면 경고합니다.
+- frontmatter 는 그대로 두고 **본문 전체가 구글로 전송됩니다.**
+
+### 관리·점검
+
+```bash
 tistory blogs [--json]            # 내 블로그 목록 조회만 (저장 안 함)
 tistory config select-blog        # 블로그를 다시 고르기
 tistory config set-blog myblog    # 이름으로 직접 지정
 tistory auth status               # 실제로 관리 페이지에 들어가 로그인 확인
+tistory delete [글번호]             # 글 삭제 (제목을 직접 입력해야 진행, 번호 생략 시 목록에서 선택)
 tistory doctor                    # 글을 올리지 않고 에디터 요소만 점검
 tistory diagnose                  # 화면 구조 점검을 한 번에 실행해 diagnose-report.txt 로 저장 (읽기 전용)
-tistory batch ./posts [--publish]    # 폴더·여러 파일을 한 번에 (기본 임시저장, 계획 확인 후 진행)
-tistory delete [글번호]             # 글 삭제 (제목을 직접 입력해야 진행, 번호 생략 시 목록에서 선택)
 tistory auth logout               # 저장된 세션 삭제
 ```
 
@@ -127,8 +190,9 @@ tistory login --auto              # 수동으로 한 번 시험
 ```
 src/
   cli.ts          진입점 (명령 등록 · `--login` 같은 별칭)
-  commands/       명령어 정의 (auth, blog, publish, batch, delete, doctor, inspect)
-  actions/        브라우저로 실제 일을 하는 코드 (publisher 임시저장·발행, deleter, batch, viewer)
+  commands/       명령어 정의 (auth, blog, publish, drafts, write, batch, delete, doctor, inspect)
+  actions/        브라우저로 실제 일을 하는 코드 (publisher 임시저장·발행, drafts, deleter, batch, viewer)
+  ai/             AI 글쓰기·점검·다듬기 (providers 호출, draft, spell, improve)
   auth/           세션 검증(session), 자동 로그인(autologin), 계정 패널(account)
   blog/           블로그 목록(blogs), 글 목록(posts)
   post/           원고 파싱(post), 이미지 처리(images)
@@ -147,4 +211,9 @@ test/             단위 테스트 (`npm test`)
 - [x] 글 삭제 (`tistory delete`)
 - [x] 일괄 올리기 (`tistory batch`), 중복 방지
 - [x] 이미지 업로드 (원고의 로컬 이미지를 자동 업로드)
-- [ ] AI 글쓰기 연동 (`tistory write`): 주제 입력 → 초안 생성 → 미리보기·수정 → 임시저장
+- [x] 임시저장 글 발행 (`tistory publish-draft`)
+- [x] AI 글쓰기 (`tistory write`, Gemini): 주제 입력 → 초안 → 임시저장
+- [x] 맞춤법 점검 (`tistory check`, Gemini)
+- [x] 글 다듬기 + diff (`tistory improve`, Gemini)
+- [ ] AI 공급자 추가 (Claude, ChatGPT), 초안 수정 요청
+- [ ] 글 수정

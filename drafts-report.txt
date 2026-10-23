@@ -1,0 +1,34 @@
+버튼: 2
+
+===== 1) 임시저장 목록을 열었을 때 새로 보이는 요소 (11) =====
+  body#editor-root.tistory.ReactModal__Body--open  "⟨200자⟩"
+  a#kakaoServiceLogo.link_logo href~"" "티스토리"
+  a.link_profile href~"" "Hyeonlog"
+  a.opensource href~"/osa/hermes/notice/N.html" "⟨11자⟩"
+  a.link_dwn href~"/axz_keditor/opensource/KEDITOR-N.N.N.zi" "DOWNLOAD"
+  a.opensource.link_company href~"" "⟨15자⟩"
+  a.count role="button" aria-label="⟨10자⟩" aria-expanded="true" href~"" "2"
+  a.link_info href~"" "⟨27자⟩"
+  a.link_info href~"" "이미지 테스트"
+  button.btn.btn-cancel type="button" "취소"
+  button.btn.btn-default type="button" "임시저장하기"
+
+눌러 볼 요소: 2개 중 마지막 a.link_info 를 누름
+  항목0 조상: DD. > DIV.info_editor
+    <div class="info_editor"><dt>27분전</dt><dd class=""><a class="link_info">⟨27자⟩</a><button type="button" class="mce-ico ico_trash">삭제</button><div class="layer_info"><div class="inner_layer">⟨400자⟩</div></div></dd></div>
+  항목1 조상: DD. > DIV.info_editor
+    <div class="info_editor"><dt>⟨10자⟩</dt><dd class=""><a class="link_info">이미지 테스트</a><button type="button" class="mce-ico ico_trash">삭제</button><div class="layer_info"><div class="inner_layer">앞뒤</div></div></dd></div>
+주소: https://hyeonlogforweb.tistory.com/manage/newpost/# → https://hyeonlogforweb.tistory.com/manage/newpost/#
+불러온 뒤 제목 글자 수: 7
+
+===== 2) 항목을 누른 뒤 새로 보이는 요소 (2) =====
+  body#editor-root.tistory  "⟨142자⟩"
+  a.count role="button" aria-label="⟨10자⟩" aria-expanded="false" href~"" "2"
+
+===== 발생한 대화상자 (1) =====
+  confirm: 2026. 10. 22. 09:04에 저장된 글이 있습니다.
+이어서 작성하시겠습니까?
+
+===== 전송된 쓰기 요청 (0) =====
+
+저장·발행·삭제는 하지 않았습니다.

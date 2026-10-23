@@ -18,7 +18,7 @@ test("확인 건너뛰기: CI, 끄기 환경변수, 터미널 아님", () => {
 });
 
 test("안내 문구에 세 설치 도구의 업데이트 명령이 있음", () => {
-  const text = updateNotice("0.1.0", "0.2.0");
+  const text = updateNotice("0.1.0", "0.2.0", "0.3.0");
   assert.match(text, /0\.1\.0 → 0\.2\.0/);
   assert.match(text, /npm update -g tistory-cli/);
   assert.match(text, /pnpm add -g tistory-cli@latest/);

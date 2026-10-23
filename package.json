@@ -1,6 +1,6 @@
 {
   "name": "tistory-cli",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Unofficial Tistory CLI: publish Markdown posts from your terminal via browser automation",
   "keywords": [
     "tistory",

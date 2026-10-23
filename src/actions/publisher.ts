@@ -416,7 +416,7 @@ async function saveAndConfirm(page: Page): Promise<"count" | "toast"> {
 
 /** 이미 열려 있는 글쓰기 화면에서 임시저장까지 수행한다. (테스트를 위해 분리) */
 /** 모드 변경 확인창은 항상 승인한다. 발행 단계에서는 그 밖의 확인창도 승인한다. */
-function watchDialogs(page: Page, log: Log): { acceptAll: boolean } {
+export function watchDialogs(page: Page, log: Log): { acceptAll: boolean } {
   const state = { acceptAll: false };
   page.on("dialog", (dialog) => {
     const message = dialog.message().replace(/\s+/g, " ").slice(0, 80);
@@ -539,7 +539,21 @@ export async function publishOnPage(
   const warnings: string[] = [];
 
   await fillEditor(page, post, log, options, warnings);
+  return completePublish(page, post.title, log, options, warnings, dialogs);
+}
 
+/**
+ * 에디터에 글이 채워진 상태에서 '완료' → 공개 범위 → 발행 → 목록에서 확인까지 수행한다.
+ * (원고를 채운 뒤, 또는 임시저장 글을 불러온 뒤 함께 쓴다)
+ */
+export async function completePublish(
+  page: Page,
+  title: string,
+  log: Log,
+  options: { blog: string; visibility: PublishVisibility },
+  warnings: string[],
+  dialogs: { acceptAll: boolean },
+): Promise<PublishResult> {
   // 같은 제목의 예전 글과 구별하려고, 발행 전 가장 큰 글 번호를 기억해 둔다.
   const before = await fetchPostRows(page.context(), options.blog);
   const maxBefore = before.reduce((max, row) => Math.max(max, row.id), 0);
@@ -573,7 +587,7 @@ export async function publishOnPage(
     const rows = await fetchPostRows(page.context(), options.blog).catch(
       () => [] as Awaited<ReturnType<typeof fetchPostRows>>,
     );
-    const hit = rows.find((row) => row.id > maxBefore && row.title.trim() === post.title.trim());
+    const hit = rows.find((row) => row.id > maxBefore && row.title.trim() === title.trim());
     if (hit) return { id: hit.id, url: hit.url, warnings };
   }
   throw new PublishError(
